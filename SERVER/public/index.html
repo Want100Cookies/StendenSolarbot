@@ -1,0 +1,20 @@
+<html>
+	<head>
+		<title>Node.js</title>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript">
+			window.onload = function() {
+			 
+			    var socket = io.connect('http://localhost:3700');
+			 
+			    socket.on('message', function (data) {
+			        console.log(data);
+			    });
+			 
+			}
+		</script>
+	</head>
+	<body>
+		<h1>Node.js home page</h1>
+	</body>
+</html>
