@@ -2,19 +2,29 @@
 	<head>
 		<title>Node.js</title>
 		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script type="text/javascript">
-			window.onload = function() {
-			 
+			$(document).ready(function() {
+
 			    var socket = io.connect('http://localhost:3700');
-			 
+
 			    socket.on('message', function (data) {
-			        console.log(data);
+			        $('.message').html(data);
 			    });
-			 
-			}
+
+				$('.link').click(function() {
+					console.log("link clicked");
+					socket.emit('ping', {});
+				});
+				socket.emit('ping', {});
+			});
 		</script>
 	</head>
 	<body>
 		<h1>Node.js home page</h1>
+		<a class="link" href="#">Ping server</a>
+		<br/>
+		<div class="message">
+		</div>
 	</body>
 </html>

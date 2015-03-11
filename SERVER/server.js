@@ -1,19 +1,40 @@
 var express = require("express");
 var app = express();
-var port = 3700;
+var wPort = 3700;
+var sPort = 'COM4';
 
+var SerialPort = require('serialport').SerialPort;
+var buffer;
 
 app.get("/", function(req, res) {
 	res.sendfile("./public/index.html");
 });
 
-var io = require("socket.io").listen(app.listen(port));
-console.log("Listening on port " + port);
+var io = require("socket.io").listen(app.listen(wPort));
+console.log("Listening on port " + wPort);
 
-io.sockets.on('connection', function(socket) {
-	socket.emit('message', { message: 'Hi there'});
+var sp = new SerialPort(sPort, {
+	baudrate: 9600
 });
 
+io.sockets.on('connection', function(socket) {
+	socket.emit('message', 'Hi there');
+
+	socket.on('ping', function(data) {
+		socket.emit('message', 'pong');
+		console.log("Socket " + socket.id + " pinged the server.");
+	});
+});
+
+sp.on('open', function() {
+	console.log('Serial port opened');
+	io.sockets.emit('message', 'Serial port opened');
+
+	sp.on('data', function(data) {
+		buffer += data.toString();
+		io.sockets.emit('message', buffer);
+	})
+});
 
 // var SerialPort  = require('serialport').SerialPort;
 // var portName = 'COM3';
@@ -31,7 +52,7 @@ io.sockets.on('connection', function(socket) {
 // });
 
 // io.sockets.on('connection', function (socket) {
-// 	// If socket.io receives message from the client browser then 
+// 	// If socket.io receives message from the client browser then
 //     // this call back will be executed.
 //     socket.on('message', function (msg) {
 //     	console.log(msg);
@@ -47,11 +68,10 @@ io.sockets.on('connection', function(socket) {
 // sp.on('data', function (data) { // call back when data is received
 //     readData += data.toString(); // append data to buffer
 //     // if the letters 'A' and 'B' are found on the buffer then isolate what's in the middle
-//     // as clean data. Then clear the buffer. 
+//     // as clean data. Then clear the buffer.
 //     if (readData.indexOf('B') >= 0 && readData.indexOf('A') >= 0) {
 //         cleanData = readData.substring(readData.indexOf('A') + 1, readData.indexOf('B'));
 //         readData = '';
 //         io.sockets.emit('message', cleanData);
 // 	}
 // });
-
