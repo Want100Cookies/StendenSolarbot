@@ -1,7 +1,7 @@
 # Robot1
 
 Team members:
-- Mark Mandenmaker
+- Mark Mandemaker
 - Sieger van der Iest
 - Pascal Drewes
 - Bjorne Hoeksema
