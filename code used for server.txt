@@ -1,1 +1,3 @@
 http://arduino.cc/en/Tutorial/SoftwareSerialExample
+
+Mac van de arduino: 30:14:11:18:21:41
