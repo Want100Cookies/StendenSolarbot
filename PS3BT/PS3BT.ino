@@ -18,12 +18,20 @@ PS3BT PS3(&Btd); // This will just create the instance
 const int MotorAFORWARD = 3;
 const int MotorABACKWARD = 5;
 const int MotorBFORWARD = 6;
-const int MotorBBACKWARD = 11;
+const int MotorBBACKWARD = 9;
 
-char dirL;
-char dirR;
+char dirL = 'F';
+char dirR = 'F';
 
 void setup() {
+   pinMode(MotorAFORWARD, OUTPUT);
+  pinMode(MotorABACKWARD, OUTPUT);
+  pinMode(MotorBFORWARD, OUTPUT);
+  pinMode(MotorBBACKWARD, OUTPUT);
+  digitalWrite(MotorAFORWARD, LOW);
+  digitalWrite(MotorABACKWARD, LOW);
+  digitalWrite(MotorBFORWARD, LOW);
+  digitalWrite(MotorBBACKWARD, LOW);
   Serial.begin(115200);
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
@@ -35,7 +43,6 @@ void loop() {
   Usb.Task();
 
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
-    Serial.print(F("\r\nPS3 controller connected. Ready to rummmbllleeee!"));
     if (PS3.getButtonClick(L1))
       toggleDir('L');
     if (PS3.getButtonClick(R1))
@@ -72,12 +79,17 @@ void move(char Motor, int speed)
       break;
     }
   }
-  if(dir == 'B') {
-    digitalWrite(forward, LOW);
-    analogWrite(backward, speed);
+  if(speed > 50) {
+    if(dir == 'B') {
+      digitalWrite(forward, LOW);
+      analogWrite(backward, speed);
+    } else {
+      digitalWrite(backward, LOW);
+      analogWrite(forward, speed);
+    }
   } else {
+    digitalWrite(forward, LOW);
     digitalWrite(backward, LOW);
-    analogWrite(forward, speed);
   }
 }
 
