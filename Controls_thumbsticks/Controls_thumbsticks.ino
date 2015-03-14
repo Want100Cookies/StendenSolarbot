@@ -1,5 +1,14 @@
+/*
+#####################################
+RIGHT NOW IT IS JUST A COPY FROM R2L2
+#####################################
+*/
+
+
+
 #include <PS3BT.h>
 #include <usbhub.h>
+#include <SoftwareSerial.h>
 // Satisfy IDE, which only needs to see the include statment in the ino.
 #ifdef dobogusinclude
 #include <spi4teensy3.h>
@@ -14,6 +23,11 @@ BTD Btd(&Usb); // You have to create the Bluetooth Dongle instance like so
 PS3BT PS3(&Btd); // This will just create the instance
 //PS3BT PS3(&Btd, 0x00, 0x15, 0x83, 0x3D, 0x0A, 0x57); // This will also store the bluetooth address - this can be obtained from the dongle when running the sketch
 
+SoftwareSerial BTserial(2,4); // (RX, TX) For sending results to the server
+
+boolean stateSendReady = false;
+boolean stateSendNotReady = false;
+
 // Set the motor pins
 const int MotorAFORWARD = 3;
 const int MotorABACKWARD = 5;
@@ -23,8 +37,18 @@ const int MotorBBACKWARD = 9;
 char dirL = 'F';
 char dirR = 'F';
 
+// Set Sensor pin
+const int sensorPin = A0;
+
+const int numReadings = 50;
+
+int readings[numReadings];
+int index = 0;
+int total = 0;
+int average = 0;
+
 void setup() {
-   pinMode(MotorAFORWARD, OUTPUT);
+  pinMode(MotorAFORWARD, OUTPUT);
   pinMode(MotorABACKWARD, OUTPUT);
   pinMode(MotorBFORWARD, OUTPUT);
   pinMode(MotorBBACKWARD, OUTPUT);
@@ -32,30 +56,56 @@ void setup() {
   digitalWrite(MotorABACKWARD, LOW);
   digitalWrite(MotorBFORWARD, LOW);
   digitalWrite(MotorBBACKWARD, LOW);
-  Serial.begin(115200);
+  
+  for (int thisReading = 0; thisReading < numReadings; thisReading++)
+    readings[thisReading] = 0;
+  
+  Serial.begin(9600);
+  BTserial.begin(9600);
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
     while (1); //halt
   }
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
+  BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
+  stateSendNotReady = true;
 }
+
 void loop() {
   Usb.Task();
 
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
+    
+    // Send ready message in json to the server (and usb serial)
+    if(!stateSendReady) {
+      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"READY\"}");
+      Serial.println("Remote connected");
+      stateSendReady = true;
+      stateSendNotReady = false;
+    }
+    
+    // Map the buttons to actions
     if (PS3.getButtonClick(L1))
       toggleDir('L');
     if (PS3.getButtonClick(R1))
       toggleDir('R');
     if (PS3.getAnalogButton(L2)) {
-      Serial.print(F("\r\nL2: "));
-      Serial.print(PS3.getAnalogButton(L2));
       move('L', PS3.getAnalogButton(L2));
     }
     if (PS3.getAnalogButton(R2)) {
-      Serial.print(F("\r\nR2: "));
-      Serial.print(PS3.getAnalogButton(R2));
       move('R', PS3.getAnalogButton(R2));
+    }
+    
+    // Read the sensor and send to server
+    if(readSensor() == 1)
+      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"SENSOR\", \"VALUE\": \"1\"}");
+      
+  } else {
+    if(!stateSendNotReady) {
+      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
+      Serial.println("Not ready :(");
+      stateSendReady = true;
+      stateSendNotReady = false;
     }
   }
 }
@@ -114,4 +164,24 @@ void toggleDir(char Motor)
       }
     }
   }
+}
+
+int readSensor() {
+  // subtract the last reading:
+  total= total - readings[index];         
+  // read from the sensor:  
+  readings[index] = digitalRead(sensorPin); 
+  // add the reading to the total:
+  total= total + readings[index];       
+  // advance to the next position in the array:  
+  index = index + 1;                    
+
+  // if we're at the end of the array...
+  if (index >= numReadings)              
+    // ...wrap around to the beginning: 
+    index = 0;                           
+
+  // calculate the average:
+  average = total / numReadings;         
+  return average;
 }
