@@ -1,11 +1,3 @@
-/*
-#####################################
-RIGHT NOW IT IS JUST A COPY FROM R2L2
-#####################################
-*/
-
-
-
 #include <PS3BT.h>
 #include <usbhub.h>
 #include <SoftwareSerial.h>
@@ -33,9 +25,6 @@ const int MotorAFORWARD = 3;
 const int MotorABACKWARD = 5;
 const int MotorBFORWARD = 6;
 const int MotorBBACKWARD = 9;
-
-char dirL = 'F';
-char dirR = 'F';
 
 // Set Sensor pin
 const int sensorPin = A0;
@@ -84,17 +73,13 @@ void loop() {
       stateSendNotReady = false;
     }
     
-    // Map the buttons to actions
-    if (PS3.getButtonClick(L1))
-      toggleDir('L');
-    if (PS3.getButtonClick(R1))
-      toggleDir('R');
-    if (PS3.getAnalogButton(L2)) {
-      move('L', PS3.getAnalogButton(L2));
-    }
-    if (PS3.getAnalogButton(R2)) {
-      move('R', PS3.getAnalogButton(R2));
-    }
+    // !!! TODO: MAPPING SHOULD OCCUR (but don't know the ranges yet)
+    int speed, direction;
+    if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117)
+      speed = map(PS3.getAnalogHat(RightHatY), FROMLOW, TOLOW, -255, 255);
+    if (PS3.getAnalogHat(LeftHatX) > 137 || PS3.getAnalogHat(LeftHatX) < 117) {
+      direction = map(PS3.getAnalogHat(LeftHatY), FROMLOW, TOLOW, -255, 255);
+    move(speed, direction);
     
     // Read the sensor and send to server
     if(readSensor() == 1)
@@ -110,60 +95,39 @@ void loop() {
   }
 }
 
-void move(char Motor, int speed)
+void move(int speed, int direction)
 {
-  int forward, backward, dir;
-  switch(Motor) {
-    case 'L':
-    {
-      forward = MotorAFORWARD;
-      backward = MotorABACKWARD;
-      dir = dirL;
-      break;
+  if (speed < 0) { // go backwards
+    if (direction < 0) { // go left
+      
+    } else { // go right
+      
     }
-    case 'R':
-    {
-      forward = MotorBFORWARD;
-      backward = MotorBBACKWARD;
-      dir = dirR;
-      break;
+  } else { // go forwards
+    if (direction < 0) { // go left
+      
+    } else { // go right
+      
     }
   }
-  if(speed > 50) {
-    if(dir == 'B') {
-      digitalWrite(forward, LOW);
-      analogWrite(backward, speed);
-    } else {
-      digitalWrite(backward, LOW);
-      analogWrite(forward, speed);
-    }
-  } else {
-    digitalWrite(forward, LOW);
-    digitalWrite(backward, LOW);
-  }
-}
-
-void toggleDir(char Motor)
-{
-  switch(Motor) {
-    case 'L':
-    {
-      if(dirL == 'F') {
-        dirL = 'B';
-      } else {
-        dirL = 'F';
-      }
-      break;
-    }
-    case 'R':
-    {
-      if(dirR == 'F') {
-        dirR = 'B';
-      } else {
-        dirR = 'F';
-      }
-    }
-  }
+  
+  
+//  int forward, backward;
+//  if (Motor == 'L') {
+//    forward = MotorAFORWARD;
+//    backward = MotorABACKWARD;
+//  } else {
+//    forward = MotorBFORWARD;
+//    backward = MotorBBACKWARD;
+//  }
+//  if(speed > 0) {
+//    digitalWrite(forward, LOW);
+//    analogWrite(backward, speed);
+//  } else {
+//    speed = -speed;
+//    digitalWrite(backward, LOW);
+//    analogWrite(forward, speed);
+//  }
 }
 
 int readSensor() {

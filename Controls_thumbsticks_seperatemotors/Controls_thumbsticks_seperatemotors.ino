@@ -26,9 +26,6 @@ const int MotorABACKWARD = 5;
 const int MotorBFORWARD = 6;
 const int MotorBBACKWARD = 9;
 
-char dirL = 'F';
-char dirR = 'F';
-
 // Set Sensor pin
 const int sensorPin = A0;
 
@@ -76,16 +73,16 @@ void loop() {
       stateSendNotReady = false;
     }
     
-    // Map the buttons to actions
-    if (PS3.getButtonClick(L1))
-      toggleDir('L');
-    if (PS3.getButtonClick(R1))
-      toggleDir('R');
-    if (PS3.getAnalogButton(L2)) {
-      move('L', PS3.getAnalogButton(L2));
+    
+    if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117) {
+      move('R', PS3.getAnalogHat(RightHatY));
+    } else {
+      move('R', 0);
     }
-    if (PS3.getAnalogButton(R2)) {
-      move('R', PS3.getAnalogButton(R2));
+    if (PS3.getAnalogHat(LeftHatY) > 137 || PS3.getAnalogHat(LeftHatY) < 117) {
+      move('L', PS3.getAnalogHat(LeftHatY));
+    } else {
+      move('L', 0);
     }
     
     // Read the sensor and send to server
@@ -104,45 +101,22 @@ void loop() {
 
 void move(char Motor, int speed)
 {
-  int forward, backward, dir;
+  int forward, backward;
   if (Motor == 'L') {
     forward = MotorAFORWARD;
     backward = MotorABACKWARD;
-    dir = dirL;
   } else {
     forward = MotorBFORWARD;
     backward = MotorBBACKWARD;
-    dir = dirR;
   }
-  if(speed > 50) {
-    if(dir == 'B') {
-      digitalWrite(forward, LOW);
-      analogWrite(backward, speed);
-    } else {
-      digitalWrite(backward, LOW);
-      analogWrite(forward, speed);
-    }
-  } else {
+  if(speed > 0) {
     digitalWrite(forward, LOW);
-    digitalWrite(backward, LOW);
-  }
-}
-
-void toggleDir(char Motor)
-{
-  if (Motor == 'L') {
-    if(dirL == 'F') {
-      dirL = 'B';
-    } else {
-      dirL = 'F';
-    }
+    analogWrite(backward, speed);
   } else {
-    if(dirR == 'F') {
-      dirR = 'B';
-    } else {
-      dirR = 'F';
-      }
-    }
+    speed = -speed;
+    digitalWrite(backward, LOW);
+    analogWrite(forward, speed);
+  }
 }
 
 int readSensor() {
