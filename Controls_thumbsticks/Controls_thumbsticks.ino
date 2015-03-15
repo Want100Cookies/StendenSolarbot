@@ -26,16 +26,6 @@ const int MotorABACKWARD = 5;
 const int MotorBFORWARD = 6;
 const int MotorBBACKWARD = 9;
 
-// Set Sensor pin
-const int sensorPin = A0;
-
-const int numReadings = 50;
-
-int readings[numReadings];
-int index = 0;
-int total = 0;
-int average = 0;
-
 void setup() {
   pinMode(MotorAFORWARD, OUTPUT);
   pinMode(MotorABACKWARD, OUTPUT);
@@ -45,16 +35,15 @@ void setup() {
   digitalWrite(MotorABACKWARD, LOW);
   digitalWrite(MotorBFORWARD, LOW);
   digitalWrite(MotorBBACKWARD, LOW);
-  
-  for (int thisReading = 0; thisReading < numReadings; thisReading++)
-    readings[thisReading] = 0;
-  
+
   Serial.begin(9600);
   BTserial.begin(9600);
+  
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
     while (1); //halt
   }
+  
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
   BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
   stateSendNotReady = true;
@@ -81,9 +70,9 @@ void loop() {
       direction = map(PS3.getAnalogHat(LeftHatY), FROMLOW, TOLOW, -255, 255);
     move(speed, direction);
     
-    // Read the sensor and send to server
-    if(readSensor() == 1)
-      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"SENSOR\", \"VALUE\": \"1\"}");
+//    // Read the sensor and send to server
+//    if(readSensor() == 1)
+//      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"SENSOR\", \"VALUE\": \"1\"}");
       
   } else {
     if(!stateSendNotReady) {
@@ -101,17 +90,16 @@ void move(int speed, int direction)
   int speedRight = speed;
   
   if (speed < 0) { // go backwards
-  
-    speed = -speed;
+    speedLeft = -speedLeft;
+    speedRight = -speedRight;
     
     if (direction < 0) { // go left
-    
       direction = -direction;
       speedRight = speed - direction;
       
     } else { // go right
-    
       speedLeft = speed - direction;
+      
     }
     digitalWrite(MotorABACKWARD, LOW);
     digitalWrite(MotorBBACKWARD, LOW);
@@ -121,13 +109,12 @@ void move(int speed, int direction)
   } else { // go forwards
   
     if (direction < 0) { // go left
-    
       direction = -direction;
       speedRight = speed - direction;
       
     } else { // go right
-    
       speedLeft = speed - direction;
+      
     }
     digitalWrite(MotorAFORWARD, LOW);
     digitalWrite(MotorBFORWARD, LOW);
@@ -135,24 +122,4 @@ void move(int speed, int direction)
     analogWrite(MotorBBACKWARD, speedRight);
     
   }
-}
-
-int readSensor() {
-  // subtract the last reading:
-  total= total - readings[index];         
-  // read from the sensor:  
-  readings[index] = digitalRead(sensorPin); 
-  // add the reading to the total:
-  total= total + readings[index];       
-  // advance to the next position in the array:  
-  index = index + 1;                    
-
-  // if we're at the end of the array...
-  if (index >= numReadings)              
-    // ...wrap around to the beginning: 
-    index = 0;                           
-
-  // calculate the average:
-  average = total / numReadings;         
-  return average;
 }

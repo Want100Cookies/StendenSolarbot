@@ -26,16 +26,6 @@ const int MotorABACKWARD = 5;
 const int MotorBFORWARD = 6;
 const int MotorBBACKWARD = 9;
 
-// Set Sensor pin
-const int sensorPin = A0;
-
-const int numReadings = 50;
-
-int readings[numReadings];
-int index = 0;
-int total = 0;
-int average = 0;
-
 void setup() {
   pinMode(MotorAFORWARD, OUTPUT);
   pinMode(MotorABACKWARD, OUTPUT);
@@ -46,15 +36,14 @@ void setup() {
   digitalWrite(MotorBFORWARD, LOW);
   digitalWrite(MotorBBACKWARD, LOW);
   
-  for (int thisReading = 0; thisReading < numReadings; thisReading++)
-    readings[thisReading] = 0;
-  
   Serial.begin(9600);
   BTserial.begin(9600);
+  
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
     while (1); //halt
   }
+  
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
   BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
   stateSendNotReady = true;
@@ -75,19 +64,19 @@ void loop() {
     
     
     if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117) {
-      move('R', PS3.getAnalogHat(RightHatY));
+      move('R', map(PS3.getAnalogHat(RightHatY), FROM, TO, -255, 255));
     } else {
       move('R', 0);
     }
     if (PS3.getAnalogHat(LeftHatY) > 137 || PS3.getAnalogHat(LeftHatY) < 117) {
-      move('L', PS3.getAnalogHat(LeftHatY));
+      move('L', map(PS3.getAnalogHat(LeftHatY), FROM, TO, -255, 255));
     } else {
       move('L', 0);
     }
     
-    // Read the sensor and send to server
-    if(readSensor() == 1)
-      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"SENSOR\", \"VALUE\": \"1\"}");
+//    // Read the sensor and send to server
+//    if(readSensor() == 1)
+//      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"SENSOR\", \"VALUE\": \"1\"}");
       
   } else {
     if(!stateSendNotReady) {
@@ -117,24 +106,4 @@ void move(char Motor, int speed)
     digitalWrite(backward, LOW);
     analogWrite(forward, speed);
   }
-}
-
-int readSensor() {
-  // subtract the last reading:
-  total= total - readings[index];         
-  // read from the sensor:  
-  readings[index] = digitalRead(sensorPin); 
-  // add the reading to the total:
-  total= total + readings[index];       
-  // advance to the next position in the array:  
-  index = index + 1;                    
-
-  // if we're at the end of the array...
-  if (index >= numReadings)              
-    // ...wrap around to the beginning: 
-    index = 0;                           
-
-  // calculate the average:
-  average = total / numReadings;         
-  return average;
 }
