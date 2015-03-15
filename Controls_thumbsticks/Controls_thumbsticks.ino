@@ -77,7 +77,7 @@ void loop() {
     int speed, direction;
     if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117)
       speed = map(PS3.getAnalogHat(RightHatY), FROMLOW, TOLOW, -255, 255);
-    if (PS3.getAnalogHat(LeftHatX) > 137 || PS3.getAnalogHat(LeftHatX) < 117) {
+    if (PS3.getAnalogHat(LeftHatX) > 137 || PS3.getAnalogHat(LeftHatX) < 117)
       direction = map(PS3.getAnalogHat(LeftHatY), FROMLOW, TOLOW, -255, 255);
     move(speed, direction);
     
@@ -97,37 +97,44 @@ void loop() {
 
 void move(int speed, int direction)
 {
+  int speedLeft = speed;
+  int speedRight = speed;
+  
   if (speed < 0) { // go backwards
+  
+    speed = -speed;
+    
     if (direction < 0) { // go left
+    
+      direction = -direction;
+      speedRight = speed - direction;
       
     } else { // go right
-      
+    
+      speedLeft = speed - direction;
     }
+    digitalWrite(MotorABACKWARD, LOW);
+    digitalWrite(MotorBBACKWARD, LOW);
+    analogWrite(MotorAFORWARD, speedLeft);
+    analogWrite(MotorBFORWARD, speedRight);
+    
   } else { // go forwards
+  
     if (direction < 0) { // go left
+    
+      direction = -direction;
+      speedRight = speed - direction;
       
     } else { // go right
-      
+    
+      speedLeft = speed - direction;
     }
+    digitalWrite(MotorAFORWARD, LOW);
+    digitalWrite(MotorBFORWARD, LOW);
+    analogWrite(MotorABACKWARD, speedLeft);
+    analogWrite(MotorBBACKWARD, speedRight);
+    
   }
-  
-  
-//  int forward, backward;
-//  if (Motor == 'L') {
-//    forward = MotorAFORWARD;
-//    backward = MotorABACKWARD;
-//  } else {
-//    forward = MotorBFORWARD;
-//    backward = MotorBBACKWARD;
-//  }
-//  if(speed > 0) {
-//    digitalWrite(forward, LOW);
-//    analogWrite(backward, speed);
-//  } else {
-//    speed = -speed;
-//    digitalWrite(backward, LOW);
-//    analogWrite(forward, speed);
-//  }
 }
 
 int readSensor() {
