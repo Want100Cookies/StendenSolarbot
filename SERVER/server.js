@@ -1,10 +1,10 @@
 var express = require("express");
 var app = express();
 var wPort = 3700;
-var sPort = 'COM4';
+var sPort = 'COM5';
 
 var SerialPort = require('serialport').SerialPort;
-var buffer;
+var readData;
 
 app.get("/", function(req, res) {
 	res.sendfile("./public/index.html");
@@ -29,10 +29,13 @@ io.sockets.on('connection', function(socket) {
 sp.on('open', function() {
 	console.log('Serial port opened');
 	io.sockets.emit('message', 'Serial port opened');
-
 	sp.on('data', function(data) {
-		buffer += data.toString();
-		io.sockets.emit('message', buffer);
+		readData += data.toString();
+		if (readData.indexOf('{') >= 0 && readData.indexOf('}') >= 0) {
+			cleanData = "{" + readData.substring(readData.indexOf('{') + 1, readData.indexOf('}')) + "}";
+		    readData = '';
+		    io.sockets.emit('message', cleanData);
+		}
 	})
 });
 
