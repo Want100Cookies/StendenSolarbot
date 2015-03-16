@@ -26,6 +26,14 @@ const int MotorABACKWARD = 3; // PWM pin
 const int MotorBFORWARD = 4;
 const int MotorBBACKWARD = 5; // PWM pin
 
+// Sensor variables
+const int sensorPin = A5;
+
+unsigned long lastTime = 0;
+unsigned long time = 0;
+int delaySeconds = 15000; // 20 second
+
+
 void setup() {
   pinMode(MotorAFORWARD, OUTPUT);
   pinMode(MotorABACKWARD, OUTPUT);
@@ -75,6 +83,10 @@ void loop() {
       direction = 0;
     }
     move(speed, direction);
+    
+    if (PS3.getButtonClick(CROSS)) {
+      irRead();
+    }
     
 //    // Read the sensor and send to server
 //    if(readSensor() == 1)
@@ -135,5 +147,21 @@ void move(int speed, int direction)
     digitalWrite(MotorAFORWARD, HIGH);
     digitalWrite(MotorBFORWARD, HIGH);
     
+  }
+}
+
+void irRead()
+{
+  time = millis();
+  if(time > (lastTime + delaySeconds)) {
+    int reading = digitalRead(sensorPin);
+    if (reading == 0) { // Point scored
+      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"POINT\", \"VALUE\": \"1\"}");
+      lastTime = time;
+    } else {
+      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"POINT\", \"VALUE\": \"0\"}");
+    }
+  } else {
+    BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"POINT\", \"VALUE\": \"0\"}");
   }
 }
