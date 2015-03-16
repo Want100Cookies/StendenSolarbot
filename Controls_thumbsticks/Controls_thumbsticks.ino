@@ -15,16 +15,16 @@ BTD Btd(&Usb); // You have to create the Bluetooth Dongle instance like so
 PS3BT PS3(&Btd); // This will just create the instance
 //PS3BT PS3(&Btd, 0x00, 0x15, 0x83, 0x3D, 0x0A, 0x57); // This will also store the bluetooth address - this can be obtained from the dongle when running the sketch
 
-SoftwareSerial BTserial(2,4); // (RX, TX) For sending results to the server
+SoftwareSerial BTserial(7,6); // (RX, TX) For sending results to the server
 
 boolean stateSendReady = false;
 boolean stateSendNotReady = false;
 
 // Set the motor pins
-const int MotorAFORWARD = 3;
-const int MotorABACKWARD = 5;
-const int MotorBFORWARD = 6;
-const int MotorBBACKWARD = 9;
+const int MotorAFORWARD = 2;
+const int MotorABACKWARD = 3; // PWM pin
+const int MotorBFORWARD = 4;
+const int MotorBBACKWARD = 5; // PWM pin
 
 void setup() {
   pinMode(MotorAFORWARD, OUTPUT);
@@ -64,10 +64,16 @@ void loop() {
     
     // !!! TODO: MAPPING SHOULD OCCUR (but don't know the ranges yet)
     int speed, direction;
-    if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117)
-      speed = map(PS3.getAnalogHat(RightHatY), FROMLOW, TOLOW, -255, 255);
-    if (PS3.getAnalogHat(LeftHatX) > 137 || PS3.getAnalogHat(LeftHatX) < 117)
-      direction = map(PS3.getAnalogHat(LeftHatY), FROMLOW, TOLOW, -255, 255);
+    if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117) {
+      speed = map(PS3.getAnalogHat(RightHatY), 0, 255, 255, -255);
+    } else {
+      speed = 0;
+    }
+    if (PS3.getAnalogHat(LeftHatX) > 137 || PS3.getAnalogHat(LeftHatX) < 117) {
+      direction = map(PS3.getAnalogHat(LeftHatX), 0, 255, -255, 255);
+    } else {
+      direction = 0;
+    }
     move(speed, direction);
     
 //    // Read the sensor and send to server
@@ -90,36 +96,44 @@ void move(int speed, int direction)
   int speedRight = speed;
   
   if (speed < 0) { // go backwards
-    speedLeft = -speedLeft;
-    speedRight = -speedRight;
-    
+    speedLeft = -speed;
+    speedRight = -speed;
+    speed = -speed;
+
+    direction = map(direction, 0, 255, 0, speed);
+
     if (direction < 0) { // go left
       direction = -direction;
-      speedRight = speed - direction;
-      
-    } else { // go right
       speedLeft = speed - direction;
       
+    } else { // go right
+      speedRight = speed - direction;
+      
     }
-    digitalWrite(MotorABACKWARD, LOW);
-    digitalWrite(MotorBBACKWARD, LOW);
-    analogWrite(MotorAFORWARD, speedLeft);
-    analogWrite(MotorBFORWARD, speedRight);
     
-  } else { // go forwards
-  
-    if (direction < 0) { // go left
-      direction = -direction;
-      speedRight = speed - direction;
-      
-    } else { // go right
-      speedLeft = speed - direction;
-      
-    }
-    digitalWrite(MotorAFORWARD, LOW);
-    digitalWrite(MotorBFORWARD, LOW);
     analogWrite(MotorABACKWARD, speedLeft);
     analogWrite(MotorBBACKWARD, speedRight);
+    digitalWrite(MotorAFORWARD, LOW);
+    digitalWrite(MotorBFORWARD, LOW);
+  } else { // go forwards
+    direction = map(direction, 0, 255, 0, speed);
+    
+    if (direction < 0) { // go left
+      direction = -direction;
+      speedLeft = speed - direction;
+      
+    } else { // go right
+      speedRight = speed - direction;
+      
+    }
+    
+    speedLeft = map(speedLeft, 0, 255, 255, 0);
+    speedRight = map(speedRight, 0, 255, 255, 0);
+    
+    analogWrite(MotorABACKWARD, speedLeft);
+    analogWrite(MotorBBACKWARD, speedRight);
+    digitalWrite(MotorAFORWARD, HIGH);
+    digitalWrite(MotorBFORWARD, HIGH);
     
   }
 }
