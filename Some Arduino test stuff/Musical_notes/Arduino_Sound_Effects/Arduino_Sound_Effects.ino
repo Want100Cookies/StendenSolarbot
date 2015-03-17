@@ -1,6 +1,6 @@
 #include "musical_notes.h"
 
-int speakerPin = 9; // speaker connected to digital pin 9 
+int speakerPin = A4; // speaker connected to digital pin 9 
       
 void setup()    
 {   

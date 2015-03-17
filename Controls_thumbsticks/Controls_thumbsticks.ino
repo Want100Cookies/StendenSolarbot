@@ -7,6 +7,9 @@
 #include <SPI.h>
 #endif
 
+#include "musical_notes.h"
+int speakerPin = A4;
+
 USB Usb;
 //USBHub Hub1(&Usb); // Some dongles have a hub inside
 
@@ -43,6 +46,8 @@ void setup() {
   digitalWrite(MotorABACKWARD, LOW);
   digitalWrite(MotorBFORWARD, LOW);
   digitalWrite(MotorBBACKWARD, LOW);
+  
+  pinMode(speakerPin, OUTPUT);
 
   Serial.begin(9600);
   BTserial.begin(9600);
@@ -69,8 +74,7 @@ void loop() {
       stateSendReady = true;
       stateSendNotReady = false;
     }
-    
-    // !!! TODO: MAPPING SHOULD OCCUR (but don't know the ranges yet)
+
     int speed, direction;
     if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117) {
       speed = map(PS3.getAnalogHat(RightHatY), 0, 255, 255, -255);
@@ -88,9 +92,18 @@ void loop() {
       irRead();
     }
     
-//    // Read the sensor and send to server
-//    if(readSensor() == 1)
-//      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"SENSOR\", \"VALUE\": \"1\"}");
+    if (PS3.getButtonClick(LEFT))
+      r2D2();
+      
+    if (PS3.getButtonClick(UP))
+      laugh();
+      
+    if (PS3.getButtonClick(DOWN))
+      squeak();
+      
+    if (PS3.getButtonClick(RIGHT))
+      waka();
+
       
   } else {
     if(!stateSendNotReady) {
@@ -165,3 +178,110 @@ void irRead()
     BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"POINT\", \"VALUE\": \"0\"}");
   }
 }
+
+// # # # # # # # # # # # # # # # # # # # # # # # # # # #
+//               CODE FOR THE TONES
+// # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+void beep (int speakerPin, float noteFrequency, long noteDuration)
+{    
+  int x;
+  // Convert the frequency to microseconds
+  float microsecondsPerWave = 1000000/noteFrequency;
+  // Calculate how many HIGH/LOW cycles there are per millisecond
+  float millisecondsPerCycle = 1000/(microsecondsPerWave * 2);
+  // Multiply noteDuration * number or cycles per millisecond
+  float loopTime = noteDuration * millisecondsPerCycle;
+  // Play the note for the calculated loopTime.
+  for (x=0;x<loopTime;x++)   
+          {   
+              digitalWrite(speakerPin,HIGH); 
+              delayMicroseconds(microsecondsPerWave); 
+              digitalWrite(speakerPin,LOW); 
+              delayMicroseconds(microsecondsPerWave); 
+          } 
+}       
+
+void r2D2(){
+          beep(speakerPin, note_A7,100); //A 
+          beep(speakerPin, note_G7,100); //G 
+          beep(speakerPin, note_E7,100); //E 
+          beep(speakerPin, note_C7,100); //C
+          beep(speakerPin, note_D7,100); //D 
+          beep(speakerPin, note_B7,100); //B 
+          beep(speakerPin, note_F7,100); //F 
+          beep(speakerPin, note_C8,100); //C 
+          beep(speakerPin, note_A7,100); //A 
+          beep(speakerPin, note_G7,100); //G 
+          beep(speakerPin, note_E7,100); //E 
+          beep(speakerPin, note_C7,100); //C
+          beep(speakerPin, note_D7,100); //D 
+          beep(speakerPin, note_B7,100); //B 
+          beep(speakerPin, note_F7,100); //F 
+          beep(speakerPin, note_C8,100); //C 
+}
+
+void laugh() {
+  for (int i=1000; i<2000; i=i*1.10) {
+    beep(speakerPin,i,10);
+  }
+  delay(50);
+  for (int i=1000; i>500; i=i*.90) {
+    beep(speakerPin,i,10);
+  }
+  delay(50);
+  for (int i=1000; i<2000; i=i*1.10) {
+    beep(speakerPin,i,10);
+  }
+  delay(50);
+  for (int i=1000; i>500; i=i*.90) {
+    beep(speakerPin,i,10);
+  }
+  delay(50);
+    for (int i=1000; i<2000; i=i*1.10) {
+    beep(speakerPin,i,10);
+  }
+  delay(50);
+}
+
+void squeak() {
+  for (int i=100; i<5000; i=i*1.45) {
+    beep(speakerPin,i,60);
+  }
+  delay(10);
+  for (int i=100; i<6000; i=i*1.5) {
+    beep(speakerPin,i,20);
+  }
+}
+
+void waka() {
+  for (int i=1000; i<3000; i=i*1.05) {
+    beep(speakerPin,i,10);
+  }
+  delay(100);
+  for (int i=2000; i>1000; i=i*.95) {
+    beep(speakerPin,i,10);
+  }
+    for (int i=1000; i<3000; i=i*1.05) {
+    beep(speakerPin,i,10);
+  }
+  delay(100);
+  for (int i=2000; i>1000; i=i*.95) {
+    beep(speakerPin,i,10);
+  }
+    for (int i=1000; i<3000; i=i*1.05) {
+    beep(speakerPin,i,10);
+  }
+  delay(100);
+  for (int i=2000; i>1000; i=i*.95) {
+    beep(speakerPin,i,10);
+  }
+    for (int i=1000; i<3000; i=i*1.05) {
+    beep(speakerPin,i,10);
+  }
+  delay(100);
+  for (int i=2000; i>1000; i=i*.95) {
+    beep(speakerPin,i,10);
+  }
+}
+

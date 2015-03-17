@@ -21,10 +21,10 @@ boolean stateSendReady = false;
 boolean stateSendNotReady = false;
 
 // Set the motor pins
-const int MotorAFORWARD = 3;
-const int MotorABACKWARD = 5;
-const int MotorBFORWARD = 6;
-const int MotorBBACKWARD = 9;
+const int MotorAFORWARD = 2;
+const int MotorABACKWARD = 3;
+const int MotorBFORWARD = 4;
+const int MotorBBACKWARD = 5;
 
 char dirL = 'F';
 char dirR = 'F';
