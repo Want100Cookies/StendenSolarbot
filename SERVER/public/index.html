@@ -9,12 +9,17 @@
 			    var socket = io.connect('http://localhost:3700');
 
 			    socket.on('message', function (data) {
-			        $('.message').html(data);
+			        $('.message').prepend("<p>" + data + "</p>");
 			    });
 
-				$('.link').click(function() {
-					console.log("link clicked");
+				$('.ping').click(function() {
 					socket.emit('ping', {});
+				});
+				$('.init').click(function() {
+					socket.emit('initComPorts', {});
+				});
+				$('.list').click(function() {
+					socket.emit('listActive', {});
 				});
 				socket.emit('ping', {});
 			});
@@ -22,8 +27,14 @@
 	</head>
 	<body>
 		<h1>Node.js home page</h1>
-		<a class="link" href="#">Ping server</a>
-		<br/>
+		<p>
+			<a class="ping" href="#">Ping server</a>
+			<br/>
+			<a class="init" href="#">Init com ports</a>
+			<br/>
+			<a class="list" href="#">List all active comports</a>
+		</p>
+		<h3>Log:</h3>
 		<div class="message">
 		</div>
 	</body>
