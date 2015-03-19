@@ -166,7 +166,7 @@ void irRead()
   time = millis();
   if(time > (lastTime + delaySeconds)) {
     int reading = digitalRead(sensorPin);
-    if (reading == 0) { // Point scored
+    if (reading == 1) { // Point scored
       BTserial.println("{\"COMMAND\": \"POINT\", \"VALUE\": 1}");
       PS3.setRumbleOn(RumbleLow);
       move(0, 0);
