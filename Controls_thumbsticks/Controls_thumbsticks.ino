@@ -58,7 +58,7 @@ void setup() {
   }
   
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
-  BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
+  BTserial.println("{\"COMMAND\": \"HANDSHAKE\", \"NAME\": \"robot02\", \"GAME\": \"Capture the flag\"}");
   stateSendNotReady = true;
 }
 
@@ -69,7 +69,7 @@ void loop() {
     
     // Send ready message in json to the server (and usb serial)
     if(!stateSendReady) {
-      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"READY\"}");
+      BTserial.println("{\"COMMAND\": \"STATE\", \"VALUE\": \"READY\"}");
       Serial.println("Remote connected");
       stateSendReady = true;
       stateSendNotReady = false;
@@ -88,9 +88,7 @@ void loop() {
     }
     move(speed, direction);
     
-    if (PS3.getButtonClick(CROSS)) {
-      irRead();
-    }
+    irRead();
     
     if (PS3.getButtonClick(LEFT))
       r2D2();
@@ -107,10 +105,10 @@ void loop() {
       
   } else {
     if(!stateSendNotReady) {
-      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
+      BTserial.println("{\"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
       Serial.println("Not ready :(");
-      stateSendReady = true;
-      stateSendNotReady = false;
+      stateSendReady = false;
+      stateSendNotReady = true;
     }
   }
 }
@@ -169,13 +167,11 @@ void irRead()
   if(time > (lastTime + delaySeconds)) {
     int reading = digitalRead(sensorPin);
     if (reading == 0) { // Point scored
-      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"POINT\", \"VALUE\": \"1\"}");
+      BTserial.println("{\"COMMAND\": \"POINT\", \"VALUE\": 1}");
+      PS3.setRumbleOn(RumbleLow);
+      move(0, 0);
       lastTime = time;
-    } else {
-      BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"POINT\", \"VALUE\": \"0\"}");
     }
-  } else {
-    BTserial.println("{\"NAME\": \"ROBOT02\", \"COMMAND\": \"POINT\", \"VALUE\": \"0\"}");
   }
 }
 

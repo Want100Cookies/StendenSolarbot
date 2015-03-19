@@ -12,10 +12,10 @@ console.log("Listening on port " + wPort);
 
 
 io.sockets.on('connection', function(socket) {
-	socket.emit('message', 'Hi there');
+	socket.emit('console', 'Welcome');
 
 	socket.on('ping', function(data) {
-		socket.emit('message', 'pong');
+		socket.emit('console', 'pong');
 		console.log("Socket " + socket.id + " pinged the server.");
 	});
 
@@ -24,7 +24,7 @@ io.sockets.on('connection', function(socket) {
 	});
 
 	socket.on('listActive', function(data) {
-		console.log(sPorts);
+		socket.emit('console', sPorts);
 	})
 });
 
@@ -40,11 +40,16 @@ function initComPorts() {
 			sPorts.push({
 				comPort: new SerialPort(port.comName, { baudrate:9600, parser: serialport.parsers.readline("\n") }, false),
 				robotName: "",
-				game: ""});
-			console.log(port.comName + " is available.");
+				game: "",
+				state: "NOTREADY",
+				points: 0
+			});
+			io.sockets.emit('console', port.comName + "-> available.");
+			// console.log(port.comName + " is available.");
 		});
 		for(var i = 0; i < sPorts.length; i++) {
-			console.log("Trying to set up comport " + sPorts[i].comPort.path);
+			io.sockets.emit('console', sPorts[i].comPort.path + "-> setting up");
+			// console.log("Trying to set up comport " + sPorts[i].comPort.path);
 			setupPortHandler(sPorts[i], i);
 		}
 	});
@@ -53,22 +58,63 @@ function initComPorts() {
 function setupPortHandler(robotObject, i) {
 	var comPort = robotObject.comPort;
 	comPort.on("error", function(err) {
-		console.log(err);
+		io.sockets.emit('console', comPort.path + "-> " + err);
+		// console.log(comPort.path + "-> " + err);
 	});
 
 	comPort.open(function(err) {
 		if (err) {
-			console.log(err);
+			io.sockets.emit('console', comPort.path + "-> " + err);
+			// console.log(err);
 			sPorts.splice(i, 1);
 			return;
 		} else {
-			console.log(comPort.path + " opened");
+			io.sockets.emit('console', comPort.path + "-> port open");
+			// console.log(comPort.path + "-> port open");
 		}
 
 		comPort.on("data", function(data){
-			io.sockets.emit('message', data);
+			processData(data, robotObject);
+		});
+
+		comPort.on("close", function(err) {
+			io.sockets.emit('console', comPort.path + "-> " + err);
+			io.sockets.emit('console', comPort.path + "-> port closed");
+			// console.log(err);
+			// console.log(comPort.path + "-> port closed");
+			sPorts.splice(i, 1);
 		});
 	});
+}
+
+function processData(data, robotObject) {
+	try {
+		var json = JSON.parse(data);
+		switch(json.COMMAND) {
+			case "HANDSHAKE":
+				robotObject.robotName = json.NAME;
+				robotObject.game = json.GAME;
+				io.sockets.emit("game", robotObject.robotName + " has send handshake to play " + robotObject.game);
+				break;
+			case "STATE":
+				robotObject.state = json.VALUE;
+				if(robotObject.state == "READY") {
+					io.sockets.emit("game", robotObject.robotName + " is ready!");
+				}
+				break;
+			case "POINT":
+				robotObject.points += json.VALUE;
+				io.sockets.emit("game", robotObject.robotName + " has scored a point. Total: " + robotObject.points);
+				break;
+			default:
+				io.sockets.emit('console', robotObject.comPort.path + "-> JSON not valid");
+				// console.log(robotObject.comPort.path + "-> JSON not valid");
+				break;
+		}
+	} catch (e) {
+		io.sockets.emit('console', robotObject.comPort.path + "-> Error processing data: " + e);
+		// console.log(robotObject.comPort.path + "-> Error processing data: " + e);
+	}
 }
 
 // sp.on('open', function() {
