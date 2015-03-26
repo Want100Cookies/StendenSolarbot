@@ -84,6 +84,8 @@ void loop() {
       case 's': // stop game
         gameState = 's';
         break;
+      case 'p': // send ping
+        BTserial.println("{\"COMMAND\": \"PING\"}");
       default:
         BTserial.print("{\"COMMAND\": \"STATE\", \"VALUE\": \"");
         BTserial.print(data);
