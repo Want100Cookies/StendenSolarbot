@@ -22,6 +22,8 @@ SoftwareSerial BTserial(7,6); // (RX, TX) For sending results to the server
 
 boolean stateSendReady = false;
 boolean stateSendNotReady = false;
+char gameState = 's'; // s = stop | b = begin
+
 
 // Set the motor pins
 const int MotorAFORWARD = 2;
@@ -34,7 +36,7 @@ const int sensorPin = A5;
 
 unsigned long lastTime = 0;
 unsigned long time = 0;
-int delaySeconds = 15000; // 20 second
+int delaySeconds = 15000; // 15 second
 
 
 void setup() {
@@ -64,8 +66,33 @@ void setup() {
 
 void loop() {
   Usb.Task();
-
-  if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
+  
+  if(BTserial.available()) {
+    char data = BTserial.read();
+    switch (data) {
+      case 'h': // handshake
+        BTserial.println("{\"COMMAND\": \"HANDSHAKE\", \"NAME\": \"robot02\", \"GAME\": \"Capture the flag\"}");
+        if(PS3.PS3Connected) {
+          BTserial.println("{\"COMMAND\": \"STATE\", \"VALUE\": \"READY\"}");
+        } else {
+          BTserial.println("{\"COMMAND\": \"STATE\", \"VALUE\": \"NOTREADY\"}");
+        }
+        break;
+      case 'b': // begin game
+        gameState = 'b';
+        break;
+      case 's': // stop game
+        gameState = 's';
+        break;
+      default:
+        BTserial.print("{\"COMMAND\": \"STATE\", \"VALUE\": \"");
+        BTserial.print(data);
+        BTserial.println("\"}");
+    }
+    Serial.println(data);
+  }
+  
+  if (PS3.PS3Connected) {
     
     // Send ready message in json to the server (and usb serial)
     if(!stateSendReady) {
@@ -75,21 +102,38 @@ void loop() {
       stateSendNotReady = false;
     }
 
-    int speed, direction;
-    if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117) {
-      speed = map(PS3.getAnalogHat(RightHatY), 0, 255, 255, -255);
-    } else {
-      speed = 0;
-    }
-    if (PS3.getAnalogHat(LeftHatX) > 137 || PS3.getAnalogHat(LeftHatX) < 117) {
-      direction = map(PS3.getAnalogHat(LeftHatX), 0, 255, -255, 255);
-    } else {
-      direction = 0;
-    }
-    move(speed, direction);
     
-    irRead();
-    
+    if(gameState == 'b') {
+      
+      int analogLeft = PS3.getAnalogButton(L2);
+      int analogRight = PS3.getAnalogButton(R2);
+      if (analogLeft > 80) {
+        rotate(analogLeft);
+        Serial.print("Rotate: ");
+        Serial.println(analogLeft);
+      }
+      if(analogRight > 80) {
+        rotate(-analogRight);
+        Serial.print("Rotate: ");
+        Serial.println(-analogRight);
+      }
+  
+      int speed, direction;
+      if (PS3.getAnalogHat(RightHatY) > 137 || PS3.getAnalogHat(RightHatY) < 117) {
+        speed = map(PS3.getAnalogHat(RightHatY), 0, 255, 255, -255);
+      } else {
+        speed = 0;
+      }
+      if (PS3.getAnalogHat(LeftHatX) > 137 || PS3.getAnalogHat(LeftHatX) < 117) {
+        direction = map(PS3.getAnalogHat(LeftHatX), 0, 255, -255, 255);
+      } else {
+        direction = 0;
+      }
+      move(speed, direction);
+  
+      irRead();
+      
+    }
     if (PS3.getButtonClick(LEFT))
       r2D2();
       
@@ -161,6 +205,25 @@ void move(int speed, int direction)
   }
 }
 
+void rotate(int speed) {
+  if(speed > 0) { // left trigger
+    int speedLeft = speed;
+    int speedRight = map(speed, 0, 255, 255, 0);
+    analogWrite(MotorABACKWARD, speedLeft);
+    analogWrite(MotorBBACKWARD, speedRight);
+    digitalWrite(MotorAFORWARD, LOW);
+    digitalWrite(MotorBFORWARD, HIGH);
+  } else { // right trigger
+    speed = -speed;
+    int speedLeft = map(speed, 0, 255, 255, 0);
+    int speedRight = speed;
+    analogWrite(MotorABACKWARD, speedLeft);
+    analogWrite(MotorBBACKWARD, speedRight);
+    digitalWrite(MotorAFORWARD, HIGH);
+    digitalWrite(MotorBFORWARD, LOW);
+  }
+}
+
 void irRead()
 {
   time = millis();
@@ -168,7 +231,7 @@ void irRead()
     int reading = digitalRead(sensorPin);
     if (reading == 1) { // Point scored
       BTserial.println("{\"COMMAND\": \"POINT\", \"VALUE\": 1}");
-      PS3.setRumbleOn(RumbleLow);
+      PS3.setRumbleOn(0x00,0x00,0x10,0xFF);
       move(0, 0);
       lastTime = time;
     }
