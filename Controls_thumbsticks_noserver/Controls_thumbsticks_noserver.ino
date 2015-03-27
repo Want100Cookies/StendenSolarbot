@@ -3,7 +3,9 @@
 #include <SoftwareSerial.h>
 #include <ServerLib.h>
 
-// ServerLib server(7,6,"Robot2","Capture the flag");
+ServerLib server(7,6,"Robot2","Capture the flag");
+boolean stateSendReady = false;
+boolean stateSendNotReady = false;
 
 // Satisfy IDE, which only needs to see the include statment in the ino.
 #ifdef dobogusinclude
@@ -60,10 +62,14 @@ void setup() {
 
 void loop() {
   Usb.Task();
-  //server.updateLoop();
+  server.updateLoop();
   if (PS3.PS3Connected) {
-    
-    //if(server.hasGameStarted()) {
+    if(!stateSendReady) {
+      server.setReadyState(true);
+      stateSendReady = true;
+      stateSendNotReady = false;
+    }
+    if(server.hasGameStarted()) {
       
       int analogLeft = PS3.getAnalogButton(L2);
       int analogRight = PS3.getAnalogButton(R2);
@@ -93,7 +99,7 @@ void loop() {
   
       irRead();
       
-    //}
+    }
     if (PS3.getButtonClick(LEFT))
       r2D2();
       
@@ -106,7 +112,13 @@ void loop() {
     if (PS3.getButtonClick(RIGHT))
       waka();
 
-  } 
+  } else {
+    if(!stateSendNotReady) {
+      server.setReadyState(false);
+      stateSendReady = false;
+      stateSendNotReady = true;
+    }
+  }
 }
 
 void move(int speed, int direction)
@@ -182,7 +194,7 @@ void irRead()
   if(time > (lastTime + delaySeconds)) {
     int reading = digitalRead(sensorPin);
     if (reading == 1) { // Point scored
-      //server.scorePoint();
+      server.scorePoint();
       PS3.setRumbleOn(0x00,0x00,0x10,0xFF);
       move(0, 0);
       lastTime = time;
