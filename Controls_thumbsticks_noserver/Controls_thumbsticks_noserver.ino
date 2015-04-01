@@ -3,7 +3,8 @@
 #include <SoftwareSerial.h>
 #include <ServerLib.h>
 
-ServerLib server(7,6,"Robot2","Capture the flag");
+SoftwareSerial BT(7,6);
+ServerLib server(BT,"Robot2","Capture the flag");
 boolean stateSendReady = false;
 boolean stateSendNotReady = false;
 
@@ -51,6 +52,7 @@ void setup() {
   pinMode(speakerPin, OUTPUT);
 
   Serial.begin(9600);
+  BT.begin(9600);
   
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
