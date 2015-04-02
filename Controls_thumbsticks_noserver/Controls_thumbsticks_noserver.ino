@@ -5,6 +5,7 @@
 
 SoftwareSerial BT(7,6);
 ServerLib server(BT,"Robot2","Capture the flag");
+
 boolean stateSendReady = false;
 boolean stateSendNotReady = false;
 
@@ -101,6 +102,8 @@ void loop() {
   
       irRead();
       
+    } else {
+      move(0, 0);
     }
     if (PS3.getButtonClick(LEFT))
       r2D2();
@@ -115,6 +118,7 @@ void loop() {
       waka();
 
   } else {
+    move(0, 0);
     if(!stateSendNotReady) {
       server.setReadyState(false);
       stateSendReady = false;
