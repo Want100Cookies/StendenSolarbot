@@ -4,7 +4,7 @@
 #include <ServerLib.h>
 
 SoftwareSerial BT(7,6);
-ServerLib server(BT,"Robot2","Capture the flag");
+ServerLib server(BT,"Robot2","Game naam");
 
 boolean stateSendReady = false;
 boolean stateSendNotReady = false;
@@ -223,31 +223,31 @@ void beep (int speakerPin, float noteFrequency, long noteDuration)
   float loopTime = noteDuration * millisecondsPerCycle;
   // Play the note for the calculated loopTime.
   for (x=0;x<loopTime;x++)   
-          {   
-              digitalWrite(speakerPin,HIGH); 
-              delayMicroseconds(microsecondsPerWave); 
-              digitalWrite(speakerPin,LOW); 
-              delayMicroseconds(microsecondsPerWave); 
-          } 
+    {   
+      digitalWrite(speakerPin,HIGH); 
+      delayMicroseconds(microsecondsPerWave); 
+      digitalWrite(speakerPin,LOW); 
+      delayMicroseconds(microsecondsPerWave); 
+    } 
 }       
 
 void r2D2(){
-          beep(speakerPin, note_A7,100); //A 
-          beep(speakerPin, note_G7,100); //G 
-          beep(speakerPin, note_E7,100); //E 
-          beep(speakerPin, note_C7,100); //C
-          beep(speakerPin, note_D7,100); //D 
-          beep(speakerPin, note_B7,100); //B 
-          beep(speakerPin, note_F7,100); //F 
-          beep(speakerPin, note_C8,100); //C 
-          beep(speakerPin, note_A7,100); //A 
-          beep(speakerPin, note_G7,100); //G 
-          beep(speakerPin, note_E7,100); //E 
-          beep(speakerPin, note_C7,100); //C
-          beep(speakerPin, note_D7,100); //D 
-          beep(speakerPin, note_B7,100); //B 
-          beep(speakerPin, note_F7,100); //F 
-          beep(speakerPin, note_C8,100); //C 
+    beep(speakerPin, note_A7,100); //A 
+    beep(speakerPin, note_G7,100); //G 
+    beep(speakerPin, note_E7,100); //E 
+    beep(speakerPin, note_C7,100); //C
+    beep(speakerPin, note_D7,100); //D 
+    beep(speakerPin, note_B7,100); //B 
+    beep(speakerPin, note_F7,100); //F 
+    beep(speakerPin, note_C8,100); //C 
+    beep(speakerPin, note_A7,100); //A 
+    beep(speakerPin, note_G7,100); //G 
+    beep(speakerPin, note_E7,100); //E 
+    beep(speakerPin, note_C7,100); //C
+    beep(speakerPin, note_D7,100); //D 
+    beep(speakerPin, note_B7,100); //B 
+    beep(speakerPin, note_F7,100); //F 
+    beep(speakerPin, note_C8,100); //C 
 }
 
 void laugh() {
