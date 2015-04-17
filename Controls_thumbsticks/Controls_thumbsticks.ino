@@ -1,9 +1,13 @@
 #include <PS3BT.h>
 #include <usbhub.h>
-#include <SoftwareSerial.h>
-#include <ServerLib.h>
+//#include <SoftwareSerial.h>
+//#include <ServerLib.h>
 
-// ServerLib server(7,6,"Robot2","Capture the flag");
+//SoftwareSerial BT(7,6);
+//ServerLib server(BT,"Robot2","RACE");
+
+//boolean stateSendReady = false;
+//boolean stateSendNotReady = false;
 
 // Satisfy IDE, which only needs to see the include statment in the ino.
 #ifdef dobogusinclude
@@ -13,6 +17,7 @@
 
 #include "musical_notes.h"
 int speakerPin = A4;
+int ledPin = A3;
 
 USB Usb;
 //USBHub Hub1(&Usb); // Some dongles have a hub inside
@@ -47,8 +52,13 @@ void setup() {
   digitalWrite(MotorBBACKWARD, LOW);
   
   pinMode(speakerPin, OUTPUT);
+  pinMode(ledPin, OUTPUT);
+  pinMode(A2, OUTPUT);
+  digitalWrite(A2, LOW);
+  digitalWrite(ledPin, LOW);
 
   Serial.begin(9600);
+//  BT.begin(9600);
   
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
@@ -60,11 +70,14 @@ void setup() {
 
 void loop() {
   Usb.Task();
-  //server.updateLoop();
+//  server.updateLoop();
   if (PS3.PS3Connected) {
-    
-    //if(server.hasGameStarted()) {
-      
+//    if(!stateSendReady) {
+//      server.setReadyState(true);
+//      stateSendReady = true;
+//      stateSendNotReady = false;
+//    }
+//    if(server.hasGameStarted()) {
       int analogLeft = PS3.getAnalogButton(L2);
       int analogRight = PS3.getAnalogButton(R2);
       if (analogLeft > 80) {
@@ -93,7 +106,9 @@ void loop() {
   
       irRead();
       
-    //}
+//    } else {
+//      move(0, 0);
+//    }
     if (PS3.getButtonClick(LEFT))
       r2D2();
       
@@ -106,7 +121,14 @@ void loop() {
     if (PS3.getButtonClick(RIGHT))
       waka();
 
-  } 
+  } else {
+    move(0, 0);
+//    if(!stateSendNotReady) {
+//      server.setReadyState(false);
+//      stateSendReady = false;
+//      stateSendNotReady = true;
+//    }
+  }
 }
 
 void move(int speed, int direction)
@@ -182,9 +204,13 @@ void irRead()
   if(time > (lastTime + delaySeconds)) {
     int reading = digitalRead(sensorPin);
     if (reading == 1) { // Point scored
-      //server.scorePoint();
+//      server.scorePoint();
       PS3.setRumbleOn(0x00,0x00,0x10,0xFF);
       move(0, 0);
+      digitalWrite(ledPin, HIGH);
+      beep(speakerPin, note_A7,100); //A 
+      beep(speakerPin, note_G7,100); //G 
+      digitalWrite(ledPin, LOW);
       lastTime = time;
     }
   }
@@ -205,31 +231,31 @@ void beep (int speakerPin, float noteFrequency, long noteDuration)
   float loopTime = noteDuration * millisecondsPerCycle;
   // Play the note for the calculated loopTime.
   for (x=0;x<loopTime;x++)   
-          {   
-              digitalWrite(speakerPin,HIGH); 
-              delayMicroseconds(microsecondsPerWave); 
-              digitalWrite(speakerPin,LOW); 
-              delayMicroseconds(microsecondsPerWave); 
-          } 
+    {   
+      digitalWrite(speakerPin,HIGH); 
+      delayMicroseconds(microsecondsPerWave); 
+      digitalWrite(speakerPin,LOW); 
+      delayMicroseconds(microsecondsPerWave); 
+    } 
 }       
 
 void r2D2(){
-          beep(speakerPin, note_A7,100); //A 
-          beep(speakerPin, note_G7,100); //G 
-          beep(speakerPin, note_E7,100); //E 
-          beep(speakerPin, note_C7,100); //C
-          beep(speakerPin, note_D7,100); //D 
-          beep(speakerPin, note_B7,100); //B 
-          beep(speakerPin, note_F7,100); //F 
-          beep(speakerPin, note_C8,100); //C 
-          beep(speakerPin, note_A7,100); //A 
-          beep(speakerPin, note_G7,100); //G 
-          beep(speakerPin, note_E7,100); //E 
-          beep(speakerPin, note_C7,100); //C
-          beep(speakerPin, note_D7,100); //D 
-          beep(speakerPin, note_B7,100); //B 
-          beep(speakerPin, note_F7,100); //F 
-          beep(speakerPin, note_C8,100); //C 
+    beep(speakerPin, note_A7,100); //A 
+    beep(speakerPin, note_G7,100); //G 
+    beep(speakerPin, note_E7,100); //E 
+    beep(speakerPin, note_C7,100); //C
+    beep(speakerPin, note_D7,100); //D 
+    beep(speakerPin, note_B7,100); //B 
+    beep(speakerPin, note_F7,100); //F 
+    beep(speakerPin, note_C8,100); //C 
+    beep(speakerPin, note_A7,100); //A 
+    beep(speakerPin, note_G7,100); //G 
+    beep(speakerPin, note_E7,100); //E 
+    beep(speakerPin, note_C7,100); //C
+    beep(speakerPin, note_D7,100); //D 
+    beep(speakerPin, note_B7,100); //B 
+    beep(speakerPin, note_F7,100); //F 
+    beep(speakerPin, note_C8,100); //C 
 }
 
 void laugh() {
